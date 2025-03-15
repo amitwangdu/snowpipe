@@ -1,0 +1,51 @@
+
+step-1 Create a Cloud Storage Integration in Snowflake
+CREATE OR REPLACE STORAGE INTEGRATION gcs_integration
+TYPE = EXTERNAL_STAGE
+STORAGE_PROVIDER = 'GCS'
+ENABLED = TRUE
+STORAGE_ALLOWED_LOCATIONS = ('gcs://testindemo/');
+
+step-2   Retrieve the Cloud Storage Service Account for your Snowflake Account
+
+DESC STORAGE INTEGRATION DESC STORAGE INTEGRATION
+
+
+Setp-3 Grant the Service Account Permissions to Access Bucket Objects
+
+
+step4 -- provide access the to the  snowflake SA
+
+
+Step-5 
+  
+CREATE OR REPLACE NOTIFICATION INTEGRATION gcs_notification_integration 
+ENABLED = TRUE
+TYPE = QUEUE
+NOTIFICATION_PROVIDER = GCP_PUBSUB
+GCP_PUBSUB_SUBSCRIPTION_NAME= 'projects/skyeyez-ai-solution/subscriptions/snowpipe-subscription'
+
+
+step- 6 
+Grant Snowflake Access to the Pub/Sub Subscription
+
+
+step-7
+create stage 
+
+CREATE OR REPLACE STAGE manage_db.public.my_gcs_stage
+URL = 'gcs://testindemo/'
+STORAGE_INTEGRATION = gcs_integration
+FILE_FORMAT = (TYPE = 'CSV' FIELD_OPTIONALLY_ENCLOSED_BY = '"')
+
+
+
+step-8
+Create a pipe with auto-ingest enabled
+
+CREATE OR REPLACE PIPE manage_db.public.my_gcs_pipe
+AUTO_INGEST = TRUE
+INTEGRATION = gcs_notification_integration
+AS 
+COPY INTO OUR_FIRST_DB.PUBLIC.FOOD_PANDA_SNOWPIPE
+FROM @manage_db.public.my_gcs_stage
